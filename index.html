@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="en" data-theme="violet">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ChaCha20 Playground – See a Stream Cipher Scramble Itself</title>
+<meta name="description" content="Interactive ChaCha20 stream cipher simulation with state matrix, quarter-round lab, avalanche demo and quiz.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1d1a4d;--mute:#5b5d86;--vio:#6c4cf1;--blue:#2f7df6;--teal:#12a89d;--coral:#ff6b6b;--sun:#ffb938;--sunink:#3a2a00;--lav:#ebe7ff;--sd:rgba(80,70,170,.25);--bg:#f4f2ff;--card:#fff;--soft:#f4f2ff;--inset:#f0eeff;--hi:#fff;--nav:rgba(255,255,255,.86);--h1:#3b2fd1;--h2:#6c4cf1;--h3:#12a89d;--s1:#4f46e5;--s2:#7c3aed;--s3:#0ea5a4;--qz:#ffe9dc;--rf:#d9f7ee;--tmA:#dcecff;--tmB:#f4f2ff;--foot:#1d1a4d;--ok:#0b8a56;--bad:#c2314f}
+[data-theme=midnight]{--ink:#e8e9ff;--mute:#9aa0d0;--vio:#7c8cff;--blue:#38bdf8;--teal:#2dd4bf;--coral:#fb7185;--sun:#fbbf24;--lav:#161b48;--sd:rgba(0,0,0,.5);--bg:#0b0f2e;--card:#151a42;--soft:#1c2257;--inset:#0f1338;--hi:rgba(255,255,255,.05);--nav:rgba(11,15,46,.88);--h1:#0a1a4a;--h2:#2b3fd1;--h3:#0e9aa7;--s1:#0f1338;--s2:#1f1c63;--s3:#0b4f5a;--qz:#18153d;--rf:#0d2a33;--tmA:#10204d;--tmB:#0b0f2e;--foot:#060820;--ok:#4ade80;--bad:#ff8aa0}
+[data-theme=neon]{--ink:#eafff4;--mute:#86d9b8;--vio:#ff2bd6;--blue:#00d9ff;--teal:#39ff88;--coral:#ff3d6e;--sun:#f9f871;--lav:#13131f;--sd:rgba(0,255,170,.14);--bg:#06060c;--card:#10101b;--soft:#171726;--inset:#0b0b14;--hi:rgba(255,255,255,.04);--nav:rgba(6,6,12,.9);--h1:#13002e;--h2:#6a00ff;--h3:#00a8d8;--s1:#09090f;--s2:#1b0a3d;--s3:#003a3a;--qz:#150a20;--rf:#071f19;--tmA:#0e0e22;--tmB:#06060c;--foot:#000;--ok:#39ff88;--bad:#ff6b8f}
+[data-theme=sunset]{--ink:#3b1d2a;--mute:#8a5a63;--vio:#d9480f;--blue:#f08c00;--teal:#0b7285;--coral:#e03131;--sun:#ffd43b;--lav:#ffe3cc;--sd:rgba(190,90,30,.25);--bg:#fff4e8;--card:#fff;--soft:#fff0e0;--inset:#fff0e0;--nav:rgba(255,255,255,.9);--h1:#7a1f3d;--h2:#e8590c;--h3:#f59f00;--s1:#b02a37;--s2:#e8590c;--s3:#f59f00;--qz:#ffe8d6;--rf:#e6fcf5;--tmA:#ffe3cc;--tmB:#fff4e8;--foot:#3b1d2a}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:74px}
+body{margin:0;font:16px/1.65 Sora,system-ui,sans-serif;color:var(--ink);background:var(--bg);overflow-x:hidden;transition:background .4s,color .4s}
+.wrap{max-width:1100px;margin:0 auto;padding:0 18px}
+section{padding:64px 0}
+h2.t{font-size:clamp(1.6rem,4vw,2.3rem);margin:0 0 8px;font-weight:800;letter-spacing:-.02em}
+h3{margin:0 0 8px;font-size:1.05rem}
+.sub{color:var(--mute);margin:0 0 28px;max-width:62ch}
+.card{background:var(--card);border-radius:24px;padding:24px;box-shadow:0 14px 34px var(--sd);transition:background .4s}
+code,.m{font-family:"IBM Plex Mono",monospace}
+#pb{position:fixed;top:0;left:0;height:3px;width:0;z-index:99;background:linear-gradient(90deg,var(--coral),var(--sun),var(--teal),var(--vio))}
+nav{position:sticky;top:0;z-index:50;background:var(--nav);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 4px 20px var(--sd)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:10px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;color:var(--ink);text-decoration:none}
+.logo{width:34px;height:34px;border-radius:11px;background:linear-gradient(135deg,var(--vio),var(--teal));display:grid;place-items:center;color:#fff;font-size:.8rem}
+.links{display:flex;gap:4px}
+.links a{padding:8px 12px;border-radius:12px;color:var(--mute);text-decoration:none;font-weight:600;font-size:.88rem;transition:.2s}
+.links a:hover{background:var(--lav);color:var(--vio)}
+.tsw{display:flex;gap:7px;padding:6px 8px;border-radius:999px;background:var(--inset)}
+.tsw button{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;transition:.2s}
+.tsw button:hover{transform:scale(1.2)}
+.tsw button.on{border-color:var(--ink);transform:scale(1.15)}
+#bg{display:none;border:0;background:var(--lav);color:var(--vio);font-size:1.3rem;border-radius:12px;width:42px;height:42px;cursor:pointer}
+@media(max-width:900px){#bg{display:block}.links{display:none;position:absolute;top:64px;left:0;right:0;flex-direction:column;background:var(--card);padding:10px 18px 16px;box-shadow:0 14px 24px var(--sd)}nav.open .links{display:flex}.brand span:last-child{display:none}.tsw{margin-left:auto}}
+.hero{position:relative;overflow:hidden;color:#fff;padding:70px 0 80px;background:linear-gradient(135deg,var(--h1),var(--h2) 48%,var(--h3))}
+.rain{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-around;opacity:.17;pointer-events:none}
+.rain div{white-space:nowrap;font:500 1.1rem "IBM Plex Mono",monospace;width:max-content;animation:slide 40s linear infinite}
+.rain div:nth-child(even){animation-direction:reverse;animation-duration:55s}
+@keyframes slide{to{transform:translateX(-50%)}}
+.orb{position:absolute;border-radius:50%;filter:blur(50px);opacity:.45;animation:flt 9s ease-in-out infinite;pointer-events:none}
+.o1{width:240px;height:240px;background:var(--sun);top:-60px;right:8%}.o2{width:200px;height:200px;background:var(--coral);bottom:-70px;left:4%;animation-delay:-4s}
+@keyframes flt{50%{transform:translate(24px,-28px) scale(1.12)}}
+.hg{position:relative;display:grid;grid-template-columns:1.15fr 1fr;gap:34px;align-items:center}
+@media(max-width:860px){.hg{grid-template-columns:1fr}.hero{padding:44px 0 56px}}
+.hero h1{font-size:clamp(2.4rem,7vw,4.2rem);line-height:1.05;margin:0 0 14px;font-weight:800;letter-spacing:-.03em}
+.hero p{margin:0 0 22px;max-width:52ch;color:#f1eeff}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.chips span{padding:5px 12px;border-radius:999px;font:600 .74rem Sora,sans-serif;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35)}
+.btns{display:flex;gap:12px;flex-wrap:wrap}
+.btn{border:0;cursor:pointer;font:600 .92rem Sora,sans-serif;padding:12px 22px;border-radius:16px;text-decoration:none;transition:.2s;display:inline-block}
+.btn.p{background:var(--sun);color:var(--sunink);box-shadow:0 8px 20px rgba(0,0,0,.25)}
+.btn.g{background:rgba(255,255,255,.18);color:#fff;border:1.5px solid rgba(255,255,255,.55)}
+.btn:hover{transform:translateY(-2px)}
+.btn:focus-visible,button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.demo{background:rgba(255,255,255,.15);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1.5px solid rgba(255,255,255,.45);border-radius:26px;padding:22px;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+.demo small{display:block;font-weight:600;color:#f1eeff;margin-bottom:6px}
+#hd{font:500 1.05rem/1.5 "IBM Plex Mono",monospace;min-height:6.2em;word-break:break-all;background:rgba(10,5,50,.4);border-radius:16px;padding:14px}
+.lock{font-size:1.6rem;display:inline-block}
+.aim{background:var(--card)}
+.aim .big{font-size:clamp(1.15rem,2.6vw,1.5rem);font-weight:600;max-width:34em;line-height:1.5}
+.th{background:var(--lav)}
+.g4{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px}
+.g4 .card{border-top:6px solid var(--c)}
+.g4 .card p{margin:0;color:var(--mute);font-size:.92rem}
+.eq{margin-top:22px;text-align:center;font:500 1.15rem "IBM Plex Mono",monospace;padding:18px;border-radius:20px;background:linear-gradient(135deg,var(--vio),var(--blue));color:#fff}
+.arx{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;align-items:center;margin-top:22px;font:600 .85rem "IBM Plex Mono",monospace}
+.arx b{padding:10px 16px;border-radius:14px;color:#fff;animation:bob 2.4s ease-in-out infinite}
+.arx b:nth-child(1){background:var(--vio)}.arx b:nth-child(3){background:var(--teal);animation-delay:.4s}.arx b:nth-child(5){background:var(--coral);animation-delay:.8s}
+.arx i{color:var(--mute);font-style:normal}
+@keyframes bob{50%{transform:translateY(-7px)}}
+.pr{background:var(--card)}
+.tl{list-style:none;margin:0;padding:0;counter-reset:s;display:grid;gap:14px}
+.tl li{counter-increment:s;display:flex;gap:16px;align-items:flex-start;padding:16px 18px;border-radius:20px;background:var(--soft)}
+.tl li::before{content:counter(s);flex:0 0 38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--coral),var(--sun))}
+.tl b{display:block}.tl span{color:var(--mute);font-size:.92rem}
+.sim{background:linear-gradient(160deg,var(--s1),var(--s2) 55%,var(--s3));color:#fff}
+.sim .sub{color:#e6e2ff}
+.sim .card{color:var(--ink);margin-bottom:22px}
+.g2{display:grid;grid-template-columns:1.1fr 1fr;gap:22px}
+@media(max-width:860px){.g2{grid-template-columns:1fr}}
+.g2 .card{margin:0}
+label{display:block;font-size:.84rem;font-weight:600;margin:14px 0 6px;color:var(--mute)}
+.row{display:flex;gap:10px}
+textarea,input[type=text],input[type=number]{width:100%;border:0;border-radius:16px;padding:12px 14px;font:500 .88rem "IBM Plex Mono",monospace;color:var(--ink);background:var(--inset);box-shadow:inset 3px 3px 8px var(--sd),inset -3px -3px 8px var(--hi);min-width:0}
+textarea{min-height:92px;resize:vertical}
+button.s{font:600 .86rem Sora,sans-serif;color:var(--ink);border:0;border-radius:14px;padding:10px 16px;cursor:pointer;background:var(--inset);box-shadow:4px 4px 10px var(--sd),-4px -4px 10px var(--hi);transition:.15s;white-space:nowrap}
+button.s:hover{transform:translateY(-1px);color:var(--vio)}
+button.s:active{box-shadow:inset 3px 3px 7px var(--sd),inset -3px -3px 7px var(--hi);transform:none}
+.seg{display:inline-flex;padding:5px;border-radius:18px;background:var(--inset);box-shadow:inset 3px 3px 7px var(--sd),inset -3px -3px 7px var(--hi)}
+.seg button{border:0;background:transparent;font:600 .88rem Sora,sans-serif;padding:8px 18px;border-radius:13px;cursor:pointer;color:var(--mute)}
+.seg button.on{background:linear-gradient(135deg,var(--vio),var(--blue));color:#fff;box-shadow:0 5px 12px var(--sd)}
+.st{margin-top:12px;font-size:.84rem;min-height:1.3em;color:var(--bad);font-weight:600}
+.vt{font-size:.84rem;font-weight:700;color:var(--ok);min-height:1.3em}
+.out{font:500 .86rem/1.7 "IBM Plex Mono",monospace;word-break:break-all;padding:16px;border-radius:18px;min-height:110px;background:var(--inset);box-shadow:inset 3px 3px 8px var(--sd),inset -3px -3px 8px var(--hi)}
+.stats{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.stat{flex:1;min-width:84px;padding:10px 12px;border-radius:16px;color:#fff;background:linear-gradient(135deg,var(--teal),var(--blue))}
+.stat:nth-child(2){background:linear-gradient(135deg,var(--vio),#a855f7)}.stat:nth-child(3){background:linear-gradient(135deg,var(--coral),var(--sun))}
+.stat b{display:block;font-size:1.25rem}.stat span{font-size:.72rem}
+.mw{display:grid;grid-template-columns:minmax(250px,420px) 1fr;gap:26px;align-items:start}
+@media(max-width:820px){.mw{grid-template-columns:1fr}}
+.mx{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;perspective:600px}
+.cell{padding:10px 2px;text-align:center;border-radius:12px;font:500 clamp(.62rem,2.6vw,.78rem) "IBM Plex Mono",monospace;color:#fff;box-shadow:0 4px 10px var(--sd)}
+.cell.c{background:var(--vio)}.cell.k{background:var(--teal)}.cell.n{background:var(--sun);color:var(--sunink)}.cell.m{background:var(--coral)}
+.cell.hit{animation:flip .55s both;outline:3px solid #ffe08a}
+@keyframes flip{0%{transform:rotateX(90deg);opacity:.2}100%{transform:none;opacity:1}}
+@keyframes pop{0%{transform:scale(.3);opacity:0}70%{transform:scale(1.3)}100%{transform:scale(1);opacity:1}}
+.lg{display:flex;gap:12px;flex-wrap:wrap;font-size:.76rem;color:var(--mute);margin-top:12px}
+.lg i{display:inline-block;width:11px;height:11px;border-radius:4px;margin-right:5px;vertical-align:-1px}
+.ctrl{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+input[type=range]{flex:1;min-width:130px;accent-color:var(--vio)}
+.rl{font-weight:600;font-size:.9rem}
+.rbar{height:8px;border-radius:99px;background:var(--inset);overflow:hidden;margin-bottom:14px}
+.rbar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--teal),var(--vio),var(--coral));transition:width .5s}
+.ops{font:500 .8rem/1.8 "IBM Plex Mono",monospace;padding:12px 14px;border-radius:16px;background:var(--inset)}
+.note{font-size:.84rem;color:var(--mute);margin:12px 0 0}
+.ks{margin-top:12px;font:500 .76rem/1.6 "IBM Plex Mono",monospace;word-break:break-all;color:var(--mute)}
+.qw{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:700px){.qw{grid-template-columns:repeat(2,1fr)}}
+.qb{padding:12px;border-radius:18px;background:var(--inset);border:2px solid transparent;transition:.25s;min-width:0}
+.qb b{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--vio);color:#fff;font-size:.85rem}
+.qb code{display:block;font-size:1rem;margin:6px 0 2px;font-weight:500}
+.qb small{font:400 .64rem/1.4 "IBM Plex Mono",monospace;color:var(--mute);word-break:break-all;display:block}
+.qb.src{border-color:var(--teal)}
+.qb.act{border-color:var(--coral);background:rgba(255,107,107,.14);animation:glow .7s}
+@keyframes glow{0%{transform:scale(1)}40%{transform:scale(1.06);box-shadow:0 0 0 6px rgba(255,107,107,.3)}100%{transform:scale(1)}}
+.qd{margin-top:14px;font:600 1rem "IBM Plex Mono",monospace;min-height:1.6em}
+.rot{margin-top:10px;font:500 .74rem/1.8 "IBM Plex Mono",monospace;word-break:break-all;color:var(--mute)}
+mark{background:var(--sun);color:var(--sunink);border-radius:3px;padding:0 1px}
+.xor{display:flex;gap:12px;overflow-x:auto;padding:6px 4px 14px;-webkit-overflow-scrolling:touch}
+.bt{flex:0 0 auto;padding:12px;border-radius:18px;background:var(--soft);font:500 .78rem/1.7 "IBM Plex Mono",monospace}
+.bt div{display:flex;justify-content:space-between;gap:12px}
+.bt .p{color:var(--vio)}.bt .k{color:var(--teal)}.bt .c{color:var(--bad);font-weight:700;border-top:2px dashed var(--mute);margin-top:4px;padding-top:4px}
+.bt .c i{font-style:normal;display:inline-block;animation:pop .45s both}
+.test{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:6px}
+.badge{padding:6px 14px;border-radius:999px;font-size:.8rem;font-weight:700;background:var(--inset)}
+.ok{color:var(--ok)}.bad{color:var(--bad)}
+.av8{display:grid;grid-template-columns:repeat(32,1fr);gap:2px;margin-top:12px}
+.av8 i{aspect-ratio:1;border-radius:2px;background:var(--inset);transition:background .3s}
+.av8 i.s{background:var(--teal);opacity:.55}
+.av8 i.d{background:var(--coral);animation:pop .5s both}
+.avr{margin-top:12px;font-weight:700;font-size:.95rem}
+.qz{background:var(--qz)}
+.qq{margin-bottom:16px}
+.qq button{display:block;width:100%;text-align:left;margin:8px 0 0;padding:11px 14px;border-radius:14px;border:2px solid var(--lav);background:var(--card);font:500 .92rem Sora,sans-serif;color:var(--ink);cursor:pointer;transition:.15s}
+.qq button:hover:not(:disabled){border-color:var(--vio);transform:translateX(4px)}
+.qq button.r{background:rgba(18,168,157,.22);border-color:var(--teal)}.qq button.w{background:rgba(255,107,107,.22);border-color:var(--coral);animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.ex{font-size:.86rem;color:var(--mute);margin:8px 0 0;min-height:1.2em}
+.score{font-weight:800;font-size:1.1rem;color:var(--vio)}
+.rf{background:var(--rf)}
+.rf ul{margin:0;padding-left:20px}.rf li{margin:8px 0}.rf a{color:var(--teal);font-weight:600;word-break:break-word}
+.tm{background:linear-gradient(180deg,var(--tmA),var(--tmB))}
+.tg{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:20px}
+.tc{text-align:center;transition:.3s;padding:34px 20px 24px;position:relative;overflow:hidden}
+.tc::before{content:"";position:absolute;left:0;right:0;top:0;height:7px;background:var(--g)}
+.tc:hover{transform:translateY(-8px)}
+.av{position:relative;width:92px;height:92px;margin:0 auto 16px;display:grid;place-items:center;font-size:2rem;font-weight:800;color:#fff;border-radius:50%;background:var(--g);box-shadow:0 12px 24px var(--sd)}
+.av::after{content:"";position:absolute;inset:-9px;border-radius:50%;border:2px dashed var(--vio);animation:spin 12s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tc h3{margin:0;font-size:1.15rem}
+.tc .role{display:inline-block;margin-top:6px;padding:4px 14px;border-radius:999px;background:var(--inset);color:var(--mute);font-size:.8rem;font-weight:600}
+.tc .hx{margin-top:14px;font:500 .68rem/1.5 "IBM Plex Mono",monospace;color:var(--mute);word-break:break-all;opacity:.8}
+footer{background:var(--foot);color:#cfcaff;text-align:center;padding:26px 18px;font-size:.88rem}
+.rv{opacity:0;transform:translateY(26px);transition:opacity .7s,transform .7s}.rv.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div id="pb"></div>
+<nav id="nav"><div class="wrap">
+  <a class="brand" href="#top"><span class="logo">C20</span><span>ChaCha20 Lab</span></a>
+  <div class="links"><a href="#aim">What it does</a><a href="#theory">How it works</a><a href="#procedure">Try it</a><a href="#sim">Playground</a><a href="#quiz">Test yourself</a><a href="#refs">Go deeper</a><a href="#team">The crew</a></div>
+  <div class="tsw" id="tsw" role="group" aria-label="Colour theme">
+    <button data-t="violet" style="background:linear-gradient(135deg,#6c4cf1,#12a89d)" aria-label="Violet theme" title="Violet"></button>
+    <button data-t="midnight" style="background:linear-gradient(135deg,#0b0f2e,#38bdf8)" aria-label="Midnight theme" title="Midnight"></button>
+    <button data-t="neon" style="background:linear-gradient(135deg,#ff2bd6,#39ff88)" aria-label="Neon theme" title="Neon"></button>
+    <button data-t="sunset" style="background:linear-gradient(135deg,#e8590c,#ffd43b)" aria-label="Sunset theme" title="Sunset"></button>
+  </div>
+  <button id="bg" aria-label="Open menu" aria-expanded="false">☰</button>
+</div></nav>
+
+<header class="hero" id="top">
+  <div class="rain" id="rain" aria-hidden="true"></div><div class="orb o1"></div><div class="orb o2"></div>
+  <div class="wrap hg">
+    <div>
+      <div class="chips"><span>256-bit key</span><span>96-bit nonce</span><span>20 rounds</span><span>RFC 8439</span></div>
+      <h1>ChaCha20 Stream Cipher</h1>
+      <p>A virtual lab that shows how a key, a nonce and a counter become a keystream. Watch the 4×4 state mix itself, round by round, and see your message turn into ciphertext. This is the cipher behind TLS 1.3 on mobile phones.</p>
+      <div class="btns"><a class="btn p" href="#sim">Jump into the playground</a><a class="btn g" href="#theory">How does it work?</a></div>
+    </div>
+    <div class="demo"><small id="hl">Plaintext</small><div id="hd"></div><div style="margin-top:10px"><span class="lock" id="lk">🔓</span></div></div>
+  </div>
+</header>
+
+<section class="aim" id="aim"><div class="wrap">
+  <h2 class="t">So, what is ChaCha20? 🔐</h2>
+  <p class="big">It turns one secret key into an endless stream of random-looking bytes, then mixes that stream into your message so only the key holder can read it. Fast, simple, and quietly protecting your phone every day.</p>
+</div></section>
+
+<section class="th" id="theory"><div class="wrap">
+  <h2 class="t">Under the hood ⚙️</h2>
+  <p class="sub">ChaCha20 was designed by Daniel J. Bernstein as a faster, more mixed version of Salsa20 and is standardised in RFC 8439. It uses only addition, rotation and XOR, so it is quick even without special hardware.</p>
+  <div class="g4">
+    <div class="card" style="--c:var(--vio)"><h3>Stream cipher</h3><p>Encrypts byte by byte with a keystream, so any message length works and no padding is needed.</p></div>
+    <div class="card" style="--c:var(--teal)"><h3>The 4×4 state</h3><p>Sixteen 32-bit words: 4 constants, 8 key words, 1 counter and 3 nonce words.</p></div>
+    <div class="card" style="--c:var(--coral)"><h3>Quarter-round</h3><p>Four words are mixed with add, XOR and rotate. Four quarter-rounds make one round, and 20 rounds make one block.</p></div>
+    <div class="card" style="--c:var(--sun)"><h3>Counter and nonce</h3><p>The counter goes up by 1 for each 64-byte block. The nonce makes each message’s keystream different.</p></div>
+  </div>
+  <div class="arx"><b>ADD +</b><i>→</i><b>ROTATE ⋘</b><i>→</i><b>XOR ⊕</b></div>
+  <div class="eq">Encrypt: Cᵢ = Pᵢ ⊕ Kᵢ &nbsp;|&nbsp; Decrypt: Pᵢ = Cᵢ ⊕ Kᵢ</div>
+</div></section>
+
+<section class="pr" id="procedure"><div class="wrap">
+  <h2 class="t">Your 6-step mission 🚀</h2>
+  <p class="sub">Six quick moves, from scrambling a message to shaking the whole cipher with a single flipped bit.</p>
+  <ol class="tl">
+    <li><div><b>Choose a mode</b><span>Pick Encrypt to turn text into hex, or Decrypt to turn hex back into text.</span></div></li>
+    <li><div><b>Enter message, key and nonce</b><span>Use the Random buttons, or press “Load RFC 8439 vector” to use the official test data.</span></div></li>
+    <li><div><b>Read the result</b><span>The output updates as you type. Use “Use result as input” to run the reverse operation.</span></div></li>
+    <li><div><b>Step through the rounds</b><span>Drag the slider or press Play. Cells that flip changed in that round.</span></div></li>
+    <li><div><b>Explore one quarter-round</b><span>Press Next to see each add, XOR and rotate on the words a, b, c and d.</span></div></li>
+    <li><div><b>Try the avalanche test</b><span>Flip one key bit and watch about half of the 512 keystream bits change.</span></div></li>
+  </ol>
+</div></section>
+
+<section class="sim" id="sim"><div class="wrap">
+  <h2 class="t">The Cipher Playground 🎛️</h2>
+  <p class="sub">Everything runs in your browser. Your secrets never leave this page.</p>
+  <div class="g2" style="margin-bottom:22px">
+    <div class="card">
+      <h3>Your secret message</h3>
+      <div class="seg" role="group" aria-label="Mode"><button id="mE" class="on">Encrypt</button><button id="mD">Decrypt</button></div>
+      <label for="msg" id="msgL">Plaintext</label>
+      <textarea id="msg" spellcheck="false">Meet me at the library at 5 pm.</textarea>
+      <label for="key">Key (64 hex characters)</label>
+      <div class="row"><input id="key" type="text" spellcheck="false"><button class="s" id="rk">Random</button></div>
+      <label for="non">Nonce (24 hex characters)</label>
+      <div class="row"><input id="non" type="text" spellcheck="false"><button class="s" id="rn">Random</button></div>
+      <label for="ctr">Starting block counter</label>
+      <input id="ctr" type="number" min="0" max="4294967295" value="1">
+      <div class="row" style="margin-top:14px;flex-wrap:wrap"><button class="s" id="rfc">Load RFC 8439 vector</button></div>
+      <div class="st" id="st" role="alert"></div>
+    </div>
+    <div class="card">
+      <h3 id="outT">Scrambled output</h3>
+      <div class="out" id="out"></div>
+      <div class="vt" id="vt"></div>
+      <div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="s" id="cp">Copy result</button><button class="s" id="sw">Use result as input</button></div>
+      <div class="stats"><div class="stat"><b id="sB">0</b><span>message bytes</span></div><div class="stat"><b id="sK">0</b><span>keystream blocks</span></div><div class="stat"><b id="sC">0</b><span>last counter</span></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Watch the cipher scramble itself</h3>
+    <div class="mw">
+      <div>
+        <div class="mx" id="mx" aria-label="4 by 4 state matrix"></div>
+        <div class="lg"><span><i style="background:var(--vio)"></i>Constants</span><span><i style="background:var(--teal)"></i>Key</span><span><i style="background:var(--sun)"></i>Counter</span><span><i style="background:var(--coral)"></i>Nonce</span></div>
+      </div>
+      <div>
+        <div class="ctrl"><button class="s" id="pl">Play</button><input id="rg" type="range" min="0" max="20" value="0" aria-label="Round"><span class="rl" id="rl"></span></div>
+        <div class="rbar"><i id="rbar"></i></div>
+        <div class="ops">a += b; d ^= a; d &lt;&lt;&lt;= 16;<br>c += d; b ^= c; b &lt;&lt;&lt;= 12;<br>a += b; d ^= a; d &lt;&lt;&lt;= 8;<br>c += d; b ^= c; b &lt;&lt;&lt;= 7;</div>
+        <p class="note">Odd rounds mix columns, even rounds mix diagonals. Flipped cells changed in this round. After round 20 the starting state is added back.</p>
+        <div class="ks" id="ks"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:22px">
+    <h3>The mixing engine: one quarter-round</h3>
+    <p class="note" style="margin:0 0 14px">Uses the RFC 8439 quarter-round test input. Ends at a = ea2a92f4, b = cb1cf8ce, c = 4581472e, d = 5881c4bb.</p>
+    <div class="ctrl"><button class="s" id="qP">◀ Back</button><button class="s" id="qN">Next ▶</button><button class="s" id="qA">Auto-play</button><button class="s" id="qR">Reset</button><span class="rl" id="qI"></span></div>
+    <div class="qw" id="qw"></div>
+    <div class="qd" id="qd"></div>
+    <div class="rot" id="qr"></div>
+  </div>
+
+  <div class="card" style="margin-top:22px">
+    <h3>The butterfly effect 🦋</h3>
+    <p class="note" style="margin:0 0 12px">Flip one random bit of the key. Each square is one of the 512 keystream bits of block 1. Red squares changed. A good cipher changes about half.</p>
+    <div class="row" style="flex-wrap:wrap"><button class="s" id="av">Flip a random key bit</button><button class="s" id="avr0">Reset</button></div>
+    <div class="av8" id="av8" aria-label="512 keystream bits"></div>
+    <div class="avr" id="avt"></div>
+  </div>
+
+  <div class="card" style="margin-top:22px">
+    <h3>Where the magic happens: XOR</h3>
+    <div class="xor" id="xor"></div>
+    <div class="test"><button class="s" id="tt">Check my work (RFC 8439 test)</button><span class="badge" id="b1">Quarter-round: not run</span><span class="badge" id="b2">Block function: not run</span></div>
+    <p class="note">Never reuse the same key and nonce for two messages. It leaks the XOR of both plaintexts.</p>
+  </div>
+</div></section>
+
+<section class="qz" id="quiz"><div class="wrap">
+  <h2 class="t">Think you got it? 🧠</h2>
+  <p class="sub">Score: <span class="score" id="sc">0 / 5</span></p>
+  <div class="card" id="qzb"></div>
+</div></section>
+
+<section class="rf" id="refs"><div class="wrap">
+  <h2 class="t">Go deeper 📚</h2>
+  <div class="card"><ul>
+    <li><a href="https://www.rfc-editor.org/rfc/rfc8439" target="_blank" rel="noopener">RFC 8439 – ChaCha20 and Poly1305 for IETF Protocols</a></li>
+    <li><a href="https://cr.yp.to/chacha/chacha-20080128.pdf" target="_blank" rel="noopener">D. J. Bernstein – ChaCha, a variant of Salsa20</a></li>
+    <li><a href="https://www.rfc-editor.org/rfc/rfc7905" target="_blank" rel="noopener">RFC 7905 – ChaCha20-Poly1305 Cipher Suites for TLS</a></li>
+    <li><a href="https://www.rfc-editor.org/rfc/rfc8446" target="_blank" rel="noopener">RFC 8446 – TLS 1.3</a></li>
+  </ul></div>
+</div></section>
+
+<section class="tm" id="team"><div class="wrap">
+  <h2 class="t">Meet the crew 👋</h2>
+  <p class="sub">The minds behind this playground. The hex line under each name is that name encrypted live with ChaCha20.</p>
+  <div class="tg">
+    <div class="card tc" style="--g:linear-gradient(135deg,#6c4cf1,#2f7df6)"><div class="av">A</div><h3>Afrin Braulio A</h3><span class="role">Team member</span><div class="hx" data-n="Afrin Braulio A"></div></div>
+    <div class="card tc" style="--g:linear-gradient(135deg,#12a89d,#2f7df6)"><div class="av">A</div><h3>Abhishek P</h3><span class="role">Team member</span><div class="hx" data-n="Abhishek P"></div></div>
+    <div class="card tc" style="--g:linear-gradient(135deg,#ff6b6b,#ffb938)"><div class="av">A</div><h3>Akshay N</h3><span class="role">Team member</span><div class="hx" data-n="Akshay N"></div></div>
+  </div>
+</div></section>
+<footer>ChaCha20 Playground · Scramble. Mix. Unlock. · Runs fully in your browser</footer>
+
+<script>
+// CORE START
+const rotl=(v,n)=>((v<<n)|(v>>>(32-n)))>>>0;
+function qr(s,a,b,c,d){
+  s[a]=(s[a]+s[b])>>>0;s[d]=rotl(s[d]^s[a],16);
+  s[c]=(s[c]+s[d])>>>0;s[b]=rotl(s[b]^s[c],12);
+  s[a]=(s[a]+s[b])>>>0;s[d]=rotl(s[d]^s[a],8);
+  s[c]=(s[c]+s[d])>>>0;s[b]=rotl(s[b]^s[c],7);
+}
+const le=(u,o)=>(u[o]|u[o+1]<<8|u[o+2]<<16|u[o+3]<<24)>>>0;
+function initState(key,ctr,non){
+  const s=new Uint32Array(16);
+  s[0]=0x61707865;s[1]=0x3320646e;s[2]=0x79622d32;s[3]=0x6b206574;
+  for(let i=0;i<8;i++)s[4+i]=le(key,i*4);
+  s[12]=ctr>>>0;
+  for(let i=0;i<3;i++)s[13+i]=le(non,i*4);
+  return s;
+}
+function history(init){
+  const h=[Uint32Array.from(init)];
+  const cols=[[0,4,8,12],[1,5,9,13],[2,6,10,14],[3,7,11,15]];
+  const dia=[[0,5,10,15],[1,6,11,12],[2,7,8,13],[3,4,9,14]];
+  for(let r=1;r<=20;r++){
+    const s=Uint32Array.from(h[r-1]);
+    (r%2?cols:dia).forEach(q=>qr(s,...q));
+    h.push(s);
+  }
+  return h;
+}
+function block(key,ctr,non){
+  const init=initState(key,ctr,non),h=history(init),out=new Uint8Array(64);
+  for(let i=0;i<16;i++){const w=(h[20][i]+init[i])>>>0;for(let j=0;j<4;j++)out[i*4+j]=(w>>>(8*j))&255;}
+  return out;
+}
+function crypt(data,key,ctr,non){
+  const out=new Uint8Array(data.length);
+  for(let b=0;b*64<data.length;b++){
+    const ks=block(key,(ctr+b)>>>0,non);
+    for(let i=0;i<64&&b*64+i<data.length;i++)out[b*64+i]=data[b*64+i]^ks[i];
+  }
+  return out;
+}
+const toHex=u=>Array.from(u,x=>x.toString(16).padStart(2,"0")).join("");
+const w8=x=>x.toString(16).padStart(8,"0");
+function fromHex(s,len){
+  s=s.replace(/\s+/g,"");
+  if(!/^[0-9a-fA-F]*$/.test(s)||s.length%2||(len&&s.length!==len*2))return null;
+  return Uint8Array.from(s.match(/../g)||[],h=>parseInt(h,16));
+}
+const OPS=[["a","+","b"],["d","^","a"],["d","<",16],["c","+","d"],["b","^","c"],["b","<",12],["a","+","b"],["d","^","a"],["d","<",8],["c","+","d"],["b","^","c"],["b","<",7]];
+function qHistory(){
+  const h=[{a:0x11111111,b:0x01020304,c:0x9b8d6f43,d:0x01234567}];
+  OPS.forEach(([x,o,y])=>{const s={...h[h.length-1]};s[x]=o==="+"?(s[x]+s[y])>>>0:o==="^"?(s[x]^s[y])>>>0:rotl(s[x],y);h.push(s)});
+  return h;
+}
+// CORE END
+
+const $=id=>document.getElementById(id);
+let mode="E",hist=null,timer=null,lastOut="",qi=0,qt=null;
+const qh=qHistory();
+const rnd=n=>toHex(crypto.getRandomValues(new Uint8Array(n)));
+const kind=i=>i<4?"c":i<12?"k":i===12?"n":"m";
+
+/* theme */
+function setTheme(t){
+  document.documentElement.dataset.theme=t;
+  document.querySelectorAll("#tsw button").forEach(b=>b.classList.toggle("on",b.dataset.t===t));
+  try{localStorage.setItem("c20theme",t)}catch(e){}
+}
+document.querySelectorAll("#tsw button").forEach(b=>b.onclick=()=>setTheme(b.dataset.t));
+let saved="violet";try{saved=localStorage.getItem("c20theme")||"violet"}catch(e){}
+setTheme(saved);
+
+/* nav, progress bar, reveal */
+$("bg").onclick=()=>{const o=$("nav").classList.toggle("open");$("bg").setAttribute("aria-expanded",o)};
+document.querySelectorAll(".links a").forEach(a=>a.onclick=()=>{$("nav").classList.remove("open");$("bg").setAttribute("aria-expanded",false)});
+addEventListener("scroll",()=>{const d=document.documentElement;$("pb").style.width=(scrollY/(d.scrollHeight-innerHeight)*100)+"%"},{passive:true});
+if("IntersectionObserver" in window){
+  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}}),{threshold:.12});
+  document.querySelectorAll("section .card,.tl li,.arx,.eq").forEach((el,i)=>{el.classList.add("rv");el.style.transitionDelay=(i%4)*80+"ms";io.observe(el)});
+}
+
+/* hero: hex rain + live scramble demo */
+$("rain").innerHTML=Array.from({length:6},()=>{const t=Array.from({length:70},()=>rnd(1)).join(" ");return `<div>${t} ${t}</div>`}).join("");
+const dk=Uint8Array.from({length:32},(_,i)=>i*7+3),dn=new Uint8Array(12),PT="MEET AT 5 PM. BRING THE NOTES!";
+const CT=toHex(crypt(new TextEncoder().encode(PT),dk,1,dn)).slice(0,PT.length);
+const GL="0123456789abcdef";
+function scramble(to,done){
+  const el=$("hd");let f=0,len=to.length;
+  const iv=setInterval(()=>{
+    f++;const fix=Math.floor(f*len/22);
+    el.textContent=to.slice(0,fix)+Array.from({length:len-fix},()=>GL[Math.random()*16|0]).join("");
+    if(fix>=len){clearInterval(iv);done&&done()}
+  },60);
+}
+function loop(enc){
+  $("hl").textContent=enc?"Ciphertext (hex), made with ChaCha20":"Plaintext";
+  $("lk").textContent=enc?"🔒":"🔓";
+  scramble(enc?CT:PT,()=>setTimeout(()=>loop(!enc),1900));
+}
+$("hd").textContent=PT;
+if(!matchMedia("(prefers-reduced-motion:reduce)").matches)setTimeout(()=>loop(true),1200);
+
+/* team: names encrypted live */
+document.querySelectorAll(".hx").forEach(el=>{el.textContent="🔒 "+toHex(crypt(new TextEncoder().encode(el.dataset.n),dk,1,dn))});
+
+/* simulator */
+function renderMatrix(){
+  const r=+$("rg").value,s=hist[r],p=r?hist[r-1]:s;
+  $("mx").innerHTML=Array.from(s,(w,i)=>`<div class="cell ${kind(i)}${r&&w!==p[i]?" hit":""}" style="animation-delay:${(i%4)*50+((i/4)|0)*30}ms">${w8(w)}</div>`).join("");
+  $("rl").textContent=r===0?"Round 0 · initial state":`Round ${r} · ${r%2?"column":"diagonal"}`;
+  $("rbar").style.width=(r*5)+"%";
+}
+function update(){
+  const key=fromHex($("key").value,32),non=fromHex($("non").value,12),ctr=Math.floor(+$("ctr").value);
+  let err="",data;
+  if(!key)err="Key must be exactly 64 hex characters (0–9, a–f).";
+  else if(!non)err="Nonce must be exactly 24 hex characters.";
+  else if(!(ctr>=0&&ctr<=4294967295))err="Counter must be between 0 and 4294967295.";
+  if(!err){
+    if(mode==="E")data=new TextEncoder().encode($("msg").value);
+    else{data=fromHex($("msg").value);if(!data)err="Ciphertext must be an even number of hex characters.";}
+  }
+  $("st").textContent=err;
+  if(err)return;
+  const res=crypt(data,key,ctr,non);
+  lastOut=mode==="E"?toHex(res):new TextDecoder().decode(res);
+  $("out").textContent=lastOut;
+  $("vt").textContent=mode==="E"&&lastOut.startsWith("6e2e359a2568f980")?"✔ Matches the RFC 8439 §2.4.2 test vector":"";
+  $("sB").textContent=data.length;
+  const nb=Math.max(1,Math.ceil(data.length/64));
+  $("sK").textContent=nb;$("sC").textContent=(ctr+nb-1)>>>0;
+  hist=history(initState(key,ctr>>>0,non));renderMatrix();
+  const ks=block(key,ctr>>>0,non);
+  $("ks").textContent="Keystream, block 1: "+toHex(ks);
+  const n=Math.min(data.length,8),b2=x=>x.toString(2).padStart(8,"0");
+  $("xor").innerHTML=n?Array.from({length:n},(_,i)=>`<div class="bt"><div><span>byte ${i}</span></div><div class="p"><span>in</span><span>${b2(data[i])}</span></div><div class="k"><span>key</span><span>${b2(ks[i])}</span></div><div class="c"><span>out</span><span>${[...b2(res[i])].map((c,j)=>`<i style="animation-delay:${i*120+j*45}ms">${c}</i>`).join("")}</span></div></div>`).join(""):"<span style='color:var(--mute)'>Type a message to see the byte-by-byte XOR.</span>";
+  avReset();
+}
+function setMode(m){
+  mode=m;$("mE").classList.toggle("on",m==="E");$("mD").classList.toggle("on",m==="D");
+  $("msgL").textContent=m==="E"?"Plaintext":"Ciphertext (hex)";
+  $("outT").textContent=m==="E"?"Scrambled output":"Unlocked message";
+  update();
+}
+$("mE").onclick=()=>setMode("E");$("mD").onclick=()=>setMode("D");
+["msg","key","non","ctr"].forEach(i=>$(i).addEventListener("input",update));
+$("rk").onclick=()=>{$("key").value=rnd(32);update()};
+$("rn").onclick=()=>{$("non").value=rnd(12);update()};
+$("rfc").onclick=()=>{
+  $("key").value=Array.from({length:32},(_,i)=>i.toString(16).padStart(2,"0")).join("");
+  $("non").value="000000000000004a00000000";$("ctr").value=1;
+  $("msg").value="Ladies and Gentlemen of the class of ’99: If I could offer you only one tip for the future, sunscreen would be it.";
+  setMode("E");
+};
+$("sw").onclick=()=>{if(!lastOut)return;const m=mode==="E"?"D":"E";$("msg").value=lastOut;setMode(m)};
+$("cp").onclick=async()=>{try{await navigator.clipboard.writeText(lastOut);$("cp").textContent="Copied";setTimeout(()=>$("cp").textContent="Copy result",1200)}catch(e){}};
+$("rg").oninput=()=>{if(hist)renderMatrix()};
+$("pl").onclick=()=>{
+  if(timer){clearInterval(timer);timer=null;$("pl").textContent="Play";return}
+  if(+$("rg").value>=20)$("rg").value=0;
+  $("pl").textContent="Pause";
+  timer=setInterval(()=>{
+    const v=+$("rg").value+1;$("rg").value=v;renderMatrix();
+    if(v>=20){clearInterval(timer);timer=null;$("pl").textContent="Replay"}
+  },650);
+};
+
+/* avalanche */
+function avReset(){
+  const key=fromHex($("key").value,32),non=fromHex($("non").value,12),ctr=Math.floor(+$("ctr").value);
+  if(!key||!non||!(ctr>=0))return;
+  $("av8").innerHTML=Array.from({length:512},()=>'<i class="s"></i>').join("");
+  $("avt").textContent="Press the button to flip one key bit.";
+}
+function avFlip(){
+  const key=fromHex($("key").value,32),non=fromHex($("non").value,12),ctr=Math.floor(+$("ctr").value);
+  if(!key||!non||!(ctr>=0))return;
+  const k2=Uint8Array.from(key),bit=crypto.getRandomValues(new Uint8Array(1))[0]%256;
+  k2[bit>>3]^=1<<(bit&7);
+  const a=block(key,ctr>>>0,non),b=block(k2,ctr>>>0,non);let n=0;
+  $("av8").innerHTML=Array.from({length:512},(_,i)=>{const d=((a[i>>3]^b[i>>3])>>(i&7))&1;n+=d;return `<i class="${d?"d":"s"}" style="animation-delay:${i*3}ms"></i>`}).join("");
+  $("avt").textContent=`Flipped key bit ${bit}: ${n} of 512 keystream bits changed (${(n/5.12).toFixed(1)}%).`;
+}
+$("av").onclick=avFlip;$("avr0").onclick=avReset;
+
+/* quarter-round lab */
+const bits=(v,n,end)=>{const s=v.toString(2).padStart(32,"0");return !n?s:end?s.slice(0,32-n)+`<mark>${s.slice(32-n)}</mark>`:`<mark>${s.slice(0,n)}</mark>`+s.slice(n)};
+function renderQ(){
+  const s=qh[qi],op=OPS[qi-1];
+  $("qw").innerHTML=["a","b","c","d"].map(l=>`<div class="qb${op&&op[0]===l?" act":""}${op&&op[1]!=="<"&&op[2]===l?" src":""}"><b>${l}</b><code>${w8(s[l])}</code><small>${bits(s[l])}</small></div>`).join("");
+  $("qI").textContent=qi?`Step ${qi} of 12`:"Start";
+  if(!op){$("qd").textContent="Press Next to run the first operation.";$("qr").innerHTML="";return}
+  const [x,o,y]=op;
+  $("qd").textContent=o==="+"?`${x} = ${x} + ${y}  (mod 2³²)`:o==="^"?`${x} = ${x} ⊕ ${y}`:`${x} = ${x} ⋘ ${y}`;
+  $("qr").innerHTML=o==="<"?`before: ${bits(qh[qi-1][x],y,false)}<br>after:&nbsp; ${bits(s[x],y,true)}<br>The highlighted ${y} bits wrap round from the left end to the right end.`:"";
+}
+const qStop=()=>{clearInterval(qt);qt=null;$("qA").textContent="Auto-play"};
+$("qN").onclick=()=>{qi=qi>=12?0:qi+1;renderQ()};
+$("qP").onclick=()=>{qi=Math.max(0,qi-1);renderQ()};
+$("qR").onclick=()=>{qStop();qi=0;renderQ()};
+$("qA").onclick=()=>{
+  if(qt){qStop();return}
+  if(qi>=12)qi=0;
+  $("qA").textContent="Pause";
+  qt=setInterval(()=>{qi++;renderQ();if(qi>=12)qStop()},1100);
+};
+
+/* self-test */
+$("tt").onclick=()=>{
+  const q=qh[12],ok1=w8(q.a)+w8(q.b)+w8(q.c)+w8(q.d)==="ea2a92f4cb1cf8ce4581472e5881c4bb";
+  const k=Uint8Array.from({length:32},(_,i)=>i);
+  const ok2=toHex(block(k,1,fromHex("000000090000004a00000000"))).startsWith("10f1e7e4d13b5915500fdd1fa32071c4");
+  [["b1","Quarter-round",ok1],["b2","Block function",ok2]].forEach(([id,t,ok])=>{$(id).textContent=`${t}: ${ok?"passed":"failed"}`;$(id).className="badge "+(ok?"ok":"bad")});
+};
+
+/* quiz */
+const QZ=[
+ {q:"How long is a ChaCha20 key?",o:["128 bits","256 bits","512 bits"],a:1,e:"The key fills 8 words of 32 bits each, which is 256 bits."},
+ {q:"Which operations does ChaCha20 use?",o:["Add, rotate, XOR","S-boxes and substitution","Modular exponentiation"],a:0,e:"It is an ARX cipher: addition, rotation and XOR only."},
+ {q:"How many rounds does ChaCha20 run per block?",o:["10","16","20"],a:2,e:"20 rounds, made of 10 column and diagonal pairs."},
+ {q:"What happens if the same key and nonce encrypt two messages?",o:["Nothing, it is safe","The XOR of both plaintexts leaks","The cipher stops working"],a:1,e:"The keystream repeats, so C1 ⊕ C2 = P1 ⊕ P2."},
+ {q:"Why is the starting state added back after the rounds?",o:["To save memory","To make the block one-way","To shorten the output"],a:1,e:"Without it, the rounds could be run backwards to recover the key."}
+];
+let sc=0,dn2=0;
+$("qzb").innerHTML=QZ.map((x,i)=>`<div class="qq"><p style="margin:0"><b>${i+1}. ${x.q}</b></p>${x.o.map((o,j)=>`<button data-i="${i}" data-j="${j}">${o}</button>`).join("")}<p class="ex" id="ex${i}"></p></div>`).join("");
+$("qzb").onclick=e=>{
+  const b=e.target.closest("button");if(!b||b.disabled)return;
+  const i=+b.dataset.i,j=+b.dataset.j,x=QZ[i],bs=b.parentNode.querySelectorAll("button");
+  bs.forEach(n=>n.disabled=true);bs[x.a].classList.add("r");
+  if(j===x.a){sc++}else b.classList.add("w");
+  $("ex"+i).textContent=(j===x.a?"Correct. ":"Not quite. ")+x.e;
+  dn2++;$("sc").textContent=`${sc} / 5`+(dn2===5?(sc===5?" · Perfect!":" · Done"):"");
+};
+
+$("key").value=rnd(32);$("non").value=rnd(12);update();renderQ();
+</script>
+</body>
+</html>
